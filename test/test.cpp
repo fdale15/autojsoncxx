@@ -32,6 +32,7 @@
 #define AUTOJSONCXX_ROOT_DIRECTORY ".."
 #endif
 
+#include <autojsoncxx/boost_types.hpp>
 #include "userdef.hpp"
 
 #include <fstream>
@@ -103,7 +104,7 @@ TEST_CASE("Test for correct parsing", "[parsing]")
 {
     SECTION("Test for an array of user", "[parsing]")
     {
-        std::vector<User> users;
+        boost::container::deque<User> users;
         ParsingResult err;
 
         bool success = from_json_file(AUTOJSONCXX_ROOT_DIRECTORY "/examples/success/user_array.json", users, err);
@@ -119,7 +120,7 @@ TEST_CASE("Test for correct parsing", "[parsing]")
             REQUIRE(u.nickname == "bigger than bigger");
             REQUIRE(u.birthday == create_date(1984, 9, 2));
 
-            REQUIRE(u.block_event.get() != 0);
+            REQUIRE(u.block_event);
             const BlockEvent& e = *u.block_event;
 
             REQUIRE(e.admin_ID > 0ULL);
@@ -159,7 +160,7 @@ TEST_CASE("Test for correct parsing", "[parsing]")
             REQUIRE(u.nickname == "bigger than bigger");
             REQUIRE(u.birthday == create_date(1984, 9, 2));
 
-            REQUIRE(u.block_event.get() != 0);
+            REQUIRE(u.block_event);
             const BlockEvent& e = *u.block_event;
 
             REQUIRE(e.admin_ID > 0ULL);
@@ -182,9 +183,9 @@ TEST_CASE("Test for correct parsing", "[parsing]")
     }
 }
 
-TEST_CASE("Test for mismatch between JSON and C++ class std::vector<config::User>", "[parsing], [error]")
+TEST_CASE("Test for mismatch between JSON and C++ class boost::container::deque<config::User>", "[parsing], [error]")
 {
-    std::vector<User> users;
+    boost::container::deque<User> users;
     ParsingResult err;
 
     SECTION("Mismatch between array and object", "[parsing], [error], [type mismatch]")
@@ -327,7 +328,7 @@ TEST_CASE("Test for mismatch between JSON and C++ class std::map<std::string, co
 
 TEST_CASE("Test for writing JSON", "[serialization]")
 {
-    std::vector<User> users;
+    boost::container::deque<User> users;
     ParsingResult err;
 
     bool success = from_json_file(AUTOJSONCXX_ROOT_DIRECTORY "/examples/success/user_array.json", users, err);
