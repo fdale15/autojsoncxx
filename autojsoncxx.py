@@ -175,8 +175,8 @@ class ClassInfo:
 
 
     def class_definition(self):
-        class_def = ' struct {name} {{\n {declarations}\n\n{constructor}\n\n \n}};' \
-            .format(name=self.name(), declarations=self.member_declarations(),
+        class_def = '{forward_declarations}\n struct {name} {{\n {declarations}\n\n{constructor}\n\n \n}};' \
+            .format(forward_declarations=self.forward_declares(), name=self.name(), declarations=self.member_declarations(),
                     constructor=self.constructor())
 
         if self._namespace is not None:
@@ -336,7 +336,6 @@ def build_class(template, class_info):
     gen = MainCodeGenerator(class_info)
     print('building class: ', class_info.namespace(), '  ', class_info.name())
     replacement = {
-        "forward declares": class_info.forward_declares(),
         "class definition": class_info.class_definition(),
         "list of declarations": gen.handler_declarations() + gen.flags_declaration(),
         "init": gen.handler_initializers(),

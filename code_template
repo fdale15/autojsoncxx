@@ -26,8 +26,6 @@
 // The comments are reserved for replacement
 // such syntax is chosen so that the template file looks like valid C++
 
-/* forward declares */
-
 /* class definition */
 
 namespace autojsoncxx {
