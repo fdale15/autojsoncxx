@@ -23,6 +23,7 @@
 #ifndef AUTOJSONCXX_AUTOJSONCXX_HPP_29A4C106C1B1
 #define AUTOJSONCXX_AUTOJSONCXX_HPP_29A4C106C1B1
 
+#include <memory>
 #include <autojsoncxx/utility.hpp>
 #include <autojsoncxx/base.hpp>
 #include <autojsoncxx/error.hpp>
