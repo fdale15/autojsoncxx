@@ -417,7 +417,7 @@ def main():
         with open(args.input) as f:
             raw_record = json.load(f)
 
-        output.write('#pragma once\n\n')
+        output.write('#pragma once\n#define AUTOJSONCXX_MODERN_COMPILER 1\n\n')
 
         def output_class(class_record):
             class_info = ClassInfo(class_record, user_defined_cache, args.namespace)
