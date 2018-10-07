@@ -30,6 +30,8 @@ import os
 import hashlib
 import sys
 
+user_defined_cache = []
+
 try:
     import simplejson as json
 except ImportError:
@@ -133,13 +135,13 @@ def check_identifier(identifier):
 class ClassInfo:
     accept_options = {"name", "namespace", "parse_mode", "members", "constructor_code", "comment"}
 
-    def __init__(self, record):
+    def __init__(self, record, cache):
         self._name = record['name']
         self._members = [MemberInfo(r) for r in record['members']]
         self._strict = record.get('parse_mode', '') == 'strict'
         self._namespace = record.get("namespace", None)
         self._constructor_code = record.get("constructor_code", "")
-
+        self.cache = cache
         check_identifier(self._name)
 
         if self._namespace is not None and not re.match(r'^(?:::)?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*$', self._namespace):
@@ -158,6 +160,19 @@ class ClassInfo:
     def constructor(self):
         return 'explicit {name}():{init} {{ {code} }}\n'.format(name=self.name(), init=self.initializer_list(),
                                                                 code=self._constructor_code)
+
+    def forward_declares(self):
+        result = ''
+
+        for udm in self.cache:
+            if len(udm) < 1:
+                continue;
+            result += '\nclass ' + udm + ';';
+        result += '\n'
+        return result
+
+
+
 
     def class_definition(self):
         class_def = 'struct {name} {{\n {declarations}\n\n{constructor}\n\n \n}};' \
@@ -321,6 +336,7 @@ def build_class(template, class_info):
     gen = MainCodeGenerator(class_info)
 
     replacement = {
+        "forward declares": class_info.forward_declares(),
         "class definition": class_info.class_definition(),
         "list of declarations": gen.handler_declarations() + gen.flags_declaration(),
         "init": gen.handler_initializers(),
@@ -392,6 +408,11 @@ def main():
              'std::map', 'std::unordered_map', 'std::multimap', 'std::unordered_multimap',
              'boost::unordered_map', 'boost::unordered_multimap', 'std::tuple'}
 
+    user_defined_cache = {''}
+
+    def populate_cache(record):
+        user_defined_cache.add(record['name'])
+
     def process_file(output):
         with open(args.input) as f:
             raw_record = json.load(f)
@@ -399,16 +420,20 @@ def main():
         output.write('#pragma once\n\n')
 
         def output_class(class_record):
-            class_info = ClassInfo(class_record)
+            class_info = ClassInfo(class_record, user_defined_cache)
             cache.add(class_info.qualified_name().lstrip(':'))
 
             if args.check:
                 check_all_members(class_info, cache)
+            print('Generating class: ', class_info.qualified_name().lstrip(':'))
             output.write(build_class(template, class_info))
 
         if isinstance(raw_record, list):
             for r in raw_record:
-                output_class(r)
+                populate_cache(r)
+
+            for r in raw_record:
+                    output_class(r)
         else:
             output_class(raw_record)
 
