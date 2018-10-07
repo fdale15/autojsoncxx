@@ -135,11 +135,11 @@ def check_identifier(identifier):
 class ClassInfo:
     accept_options = {"name", "namespace", "parse_mode", "members", "constructor_code", "comment"}
 
-    def __init__(self, record, cache):
+    def __init__(self, record, cache, namespace):
         self._name = record['name']
         self._members = [MemberInfo(r) for r in record['members']]
         self._strict = record.get('parse_mode', '') == 'strict'
-        self._namespace = record.get("namespace", None)
+        self._namespace = record.get("namespace", namespace)
         self._constructor_code = record.get("constructor_code", "")
         self.cache = cache
         check_identifier(self._name)
@@ -175,7 +175,7 @@ class ClassInfo:
 
 
     def class_definition(self):
-        class_def = 'struct {name} {{\n {declarations}\n\n{constructor}\n\n \n}};' \
+        class_def = ' struct {name} {{\n {declarations}\n\n{constructor}\n\n \n}};' \
             .format(name=self.name(), declarations=self.member_declarations(),
                     constructor=self.constructor())
 
@@ -334,7 +334,7 @@ class MainCodeGenerator:
 
 def build_class(template, class_info):
     gen = MainCodeGenerator(class_info)
-
+    print('building class: ', class_info.namespace(), '  ', class_info.name())
     replacement = {
         "forward declares": class_info.forward_declares(),
         "class definition": class_info.class_definition(),
@@ -385,6 +385,7 @@ def main():
                         action='store_true', default=False)
     parser.add_argument('-i', '--input', help='input name for the definition file for classes', required=True)
     parser.add_argument('-o', '--output', help='output name for the header file', default=None)
+    parser.add_argument('-ns', '--namespace', help='namespace for generated files', default=None)
     parser.add_argument('--template', help='location of the template file', default=None)
     args = parser.parse_args()
 
@@ -420,7 +421,7 @@ def main():
         output.write('#pragma once\n\n')
 
         def output_class(class_record):
-            class_info = ClassInfo(class_record, user_defined_cache)
+            class_info = ClassInfo(class_record, user_defined_cache, args.namespace)
             cache.add(class_info.qualified_name().lstrip(':'))
 
             if args.check:
